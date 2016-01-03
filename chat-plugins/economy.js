@@ -4,13 +4,21 @@ let fs = require('fs');
 let path = require('path');
 
 let shop = [
+	['Fix', 'Buys the ability to alter your current custom avatar or trainer card. (don\'t buy if you have neither)', 5],
+	['League Room', 'Purchases a room at a reduced rate for use with a league.  A roster must be supplied with at least 10 members for this room.', 5],
 	['Symbol', 'Buys a custom symbol to go infront of name and puts you at top of userlist. (Temporary until restart, certain symbols are blocked)', 5],
-	['Fix', 'Buys the ability to alter your current custom avatar or trainer card. (don\'t buy if you have neither)', 10],
-	['Avatar', 'Buys an custom avatar to be applied to your name (You supply. Images larger than 80x80 may not show correctly)', 20],
-	['League Room', 'Purchases a room at a reduced rate for use with a league.  A roster must be supplied with at least 10 members for this room.', 25],
-	['Trainer', 'Buys a trainer card which shows information through a command. (You supply, can be refused)', 40],
-	['Staff Help', 'Staff member will help set up roomintros and anything else needed in a room. Response may not be immediate.', 50],
-	['Room', 'Buys a chatroom for you to own. (within reason, can be refused)', 100],
+	['Avatar', 'Buys an custom avatar to be applied to your name (You supply. Images larger than 80x80 may not show correctly)', 10],
+	['Declare', 'Buys a declare that will be broadcasted to all rooms. ( Can be league advertisement, buck tours, etc)', 20],
+	['PM', 'Send a message to everyone on the server. [Can be refused] (Everyone on the server will receive a message from "~Server PM - [Do not reply] Uses: League Advertisements, Celebrations, ETC', 20],
+	['Trainer Card', 'Buys a trainer card which shows information through a command. (You supply, can be refused)', 20],
+	['Room', 'Buys a chatroom for you to own. (within reason, can be refused)', 25],
+        ['Symbol Color', 'Buys a Symbol Color that can be applied to the userlist of 3 rooms.', 50],
+	['Userlist Icon', 'Buys a userlist icon that can be applied to the userlist of 3 rooms.', 50],
+	['Name Color', 'Buys an command in which you can change your color using a gradient / ordinary color. You can only be able to use this color.', 100],
+        ['Official Room Status', 'Promotes your room to be an official room. Will be de-officialed if not treated well.', 500],
+	['Global Voice', 'Promotes you to global voice. Dont abuse it.', 1000],
+	['Custom Message', 'Buys a custom message which can be applied to your username and will be shown when you talk in the chat or talk in PMs.', 1500],
+	['Custom Color', 'Buys a custom color which can be applied to your username and will be shown when you talk in the chat or talk in PMs.', 2000],
 ];
 
 let shopDisplay = getShopDisplay(shop);
@@ -118,6 +126,12 @@ function handleBoughtItem(item, user, cost) {
 		this.sendReply("You have purchased a custom symbol. You can use /customsymbol to get your custom symbol.");
 		this.sendReply("You will have this until you log off for more than an hour.");
 		this.sendReply("If you do not want your custom symbol anymore, you may use /resetsymbol to go back to your old symbol.");
+ } else if (item === 'declare') {
+        user.canShopDeclare = true;
+        this.sendReply('You have purchased a declare. You can use /shopdeclare to declare your message.');
+ } else if (item === 'pm') {
+        user.canShopPM = true;
+        this.sendReply('You have purchased a pm. You can use /shoppm to declare your message.');
 	} else {
 		let msg = '**' + user.name + " has bought " + item + ".**";
 		Rooms.rooms.staff.add('|c|~Shop Alert|' + msg);
@@ -224,10 +238,40 @@ exports.commands = {
 	},
 	transfermoneyhelp: ["/transfer [user], [amount] - Transfer a certain amount of money to a user."],
 
-	store: 'shop',
-	shop: function (target, room, user) {
+    	shop: function(target, room, user) {
 		if (!this.canBroadcast()) return;
-		return this.sendReply("|raw|" + shopDisplay);
+		if (room.id === '' && this.broadcasting) {
+			return true;
+		} else {
+			var buttonStyle = '';
+			var topStyle = 'background: linear-gradient(10deg, #ff9933, #ff9933 ); color: ; border: 1px solid black; padding: 2px; border-radius: 5px;';
+			var descStyle = 'border-radius: 5px; border: 1px solid #ff964d; background: #ff781a; color: black;';
+			var top = '<td><center><font color="#b34900"><b><p> Inferno Shop</b></p></font><table style="' + topStyle + '" border="5" cellspacing ="5" cellpadding="5"><tr><th>Item</th><th>Description</th><th>Cost</th></tr>';
+			var bottom = '<table><td style="' + descStyle + '">To buy an item from the shop, use /buy command. If you want to know how to get money, do /getbucks.</td>';
+			function table(item, desc, price) {
+				return '<tr><td style="' + descStyle + '"><button title="Click this button to buy a(n) ' + item + ' from the shop" style="' + buttonStyle + '" name="send" value="/buy ' + item + '">' + item + '</button></td><td style="' + descStyle + '">' + desc + '</td><td style="' + descStyle + '">' + price + '</td></tr>';
+			}
+			return this.sendReply('|raw|' +
+				top +
+				table("Fix", "Buys the ability to alter your current custom avatar or trainer card. (don\'t buy if you have neither)", 5) +
+				table("League Room", "Purchases a room at a reduced rate for use with a league.  A roster must be supplied with at least 10 members for this room.", 5) +
+				table("Symbol", "Buys a custom symbol to go infront of name and puts you at top of userlist. (Temporary until restart, certain symbols are blocked)", 5) +
+				table("Avatar", "Buys an custom avatar to be applied to your name (You supply. Images larger than 80x80 may not show correctly)", 10) +
+				table("Trainer Card", "Buys a trainer card which shows information through a command. (You supply, can be refused)", 20) +
+				table("PM", "Send a message to everyone on the server. [Can be refused]", 20) +
+				table("Declare", "Globally declare a message to the whole server! [Can be refused](A small blue message that every chatroom can see; Uses: League Advertisements, Celebrations, ETC)", 20) +
+				table("Room", "Buys a chatroom for you to own. (within reason, can be refused)", 25) +
+				table("Symbol Color", "Buys a symbol color that can be applied to the userlist of 3 rooms.", 50) +
+				table("Userlist Icon", "Buys a userlist icon that can be applied to the userlist of 3 rooms.", 50) +
+				table("Name Color", "Buys an command in which you can change your color using a gradient / ordinary color. You can only be able to use this color.", 100) +
+				table("Official Room Status", "Promotes your room to be official for sometime. ( Will be de-officialed if not taken care of wisely)", 500) +
+				table("Global Voice", "Promotes you to Global Voice. Do not abuse this rank, or else it will get you demoted from this rank.", 1000) +
+				table("Custom Message", "Buys a custom message which can be applied to your messages and will be shown when you talk in the chat or talk in PMs.", 1500) +
+				table("Custom Color", "Buys a custom color which can be applied to your username and will be shown when you talk in the chat or talk in PMs.", 2000) +
+				bottom
+
+			);
+		}
 	},
 	shophelp: ["/shop - Display items you can buy with money."],
 
@@ -367,7 +411,33 @@ exports.commands = {
 		if (room.dice.p1) Db('money').set(room.dice.p1, Db('money').get(room.dice.p1, 0) + room.dice.bet);
 		room.addRaw("<b>" + user.name + " ended the dice game.</b>");
 		delete room.dice;
-	},
+    },
+
+    shopdeclare: function (target, room, user) {
+        if (!user.canShopDeclare) return this.sendReply('You need to buy this item from the shop to use.');
+        if (!target) return this.sendReply('/shopdeclare [message] - Send message to all rooms.');
+
+        for (var id in Rooms.rooms) {
+            if (id !== 'global') {
+                Rooms.rooms[id].addRaw('<div class="broadcast-blue"><b>' + target + '</b></div>');
+            }
+        }
+        this.logModCommand(user.name + " globally declared " + target);
+        user.canShopDeclare = false;
+    },
+
+    shoppm: function (target, room, user) {
+        if (!user.canShopPM) return this.sendReply('You need to buy this item from the shop to use.');
+        if (!target) return this.sendReply('/shoppm [message] - PM all users in the server.');
+        if (target.indexOf('/html') >= 0) return this.sendReply('Cannot contain /html.');
+
+        var pmName = '~Global PM from ' + user.name +' [Do not reply]';
+
+        for (var name in Users.users) {
+            var message = '|pm|' + pmName + '|' + Users.users[name].getIdentity() + '|' + target;
+            Users.users[name].send(message);
+        }
+        user.canShopPM = false;
 
 	bucks: 'economystats',
 	economystats: function (target, room, user) {
@@ -380,5 +450,6 @@ exports.commands = {
 		let output = "There is " + total + currencyName(total) + " circulating in the economy. ";
 		output += "The average user has " + average + currencyName(average) + ".";
 	},
+	
 
 };
