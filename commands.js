@@ -831,6 +831,8 @@ exports.commands = {
 		"/room[group] [username] - Promotes/demotes the user to the specified room rank. Requires: @ # & ~",
 		"/roomdeauth [username] - Removes all room rank from the user. Requires: @ # & ~"],
 
+	},
+
 	roomstaff: 'roomauth',
 	roomauth: function (target, room, user, connection) {
 		let targetRoom = room;
@@ -842,16 +844,22 @@ exports.commands = {
 		let rankLists = {};
 		for (let u in targetRoom.auth) {
 			if (!rankLists[targetRoom.auth[u]]) rankLists[targetRoom.auth[u]] = [];
-			rankLists[targetRoom.auth[u]].push(u);
+			rankLists[targetRoom.auth[u]].push(u in targetRoom.users ? "**" + u + "**" : u);
 		}
 
-		let buffer = Object.keys(rankLists).sort(function (a, b) {
+		let buffer = [];
+		if (targetRoom.founder) {
+			buffer.push("Room Founder: " + (targetRoom.founder in targetRoom.users ? ("**" + targetRoom.users[targetRoom.founder].name + "**") : targetRoom.founder));
+		}
+
+		Object.keys(rankLists).sort(function (a, b) {
 			return (Config.groups[b] || {rank:0}).rank - (Config.groups[a] || {rank:0}).rank;
-		}).map(function (r) {
-			let roomRankList = rankLists[r].sort().map(function (s) {
-				return s in targetRoom.users ? "**" + s + "**" : s;
+		}).forEach(function (r) {
+			let roomRankList = [];
+			rankLists[r].sort().forEach(function (s) {
+				roomRankList.push(s in targetRoom.users ? "**" + s + "**" : s);
 			});
-			return (Config.groups[r] ? Config.groups[r].name + "s (" + r + ")" : r) + ":\n" + roomRankList.join(", ");
+			buffer.push((Config.groups[r] ? (r == "#" ? Config.groups[r].name : "Room " + Config.groups[r].name) + "s (" + r + ")" : r) + ":\n" + roomRankList.join(", "));
 		});
 
 		if (!buffer.length) {
