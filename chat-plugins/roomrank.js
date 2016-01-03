@@ -84,4 +84,5 @@ exports.commands = {
 		if (room.chatRoomData) {
 			Rooms.global.writeChatRoomData();
 		}
+	},
 		};
