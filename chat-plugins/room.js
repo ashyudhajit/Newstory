@@ -64,3 +64,7 @@ exports.commands = {
 		if (room.isOfficial && room.isPublic) {
 			return this.sendReplyBox(room.title + ' is an <font color="blue"><b>official</b></font> room.');
 		}
+
+},
+
+};
